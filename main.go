@@ -1,6 +1,7 @@
 package main
 
 import (
+	"campaignweb/auth"
 	"campaignweb/handler"
 	"campaignweb/user"
 	"log"
@@ -20,9 +21,9 @@ func main() {
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
-	userService.SaveAvatar(1, "images/1-profil.png")
-
-	userHandler := handler.NewUserHandler(userService)
+	//
+	authSevice := auth.NewService()
+	userHandler := handler.NewUserHandler(userService, authSevice)
 
 	router := gin.Default()
 	api := router.Group("/api/v1")

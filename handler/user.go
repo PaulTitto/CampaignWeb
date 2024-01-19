@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"campaignweb/auth"
 	"campaignweb/helper"
 	"campaignweb/user"
 	"fmt"
@@ -11,10 +12,11 @@ import (
 
 type userHandler struct {
 	userService user.Service
+	authSevice  auth.Service
 }
 
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService: userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService, authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
@@ -39,7 +41,16 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	formatter := user.FormatUser(newUser, "tokentokentoken")
+
+	token, err := h.authSevice.GenerateToken(newUser.Id)
+	if err != nil {
+		response := helper.APIResponse(
+			"Register Account Failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := user.FormatUser(newUser, token)
 	response := helper.APIResponse(
 		"Account has been registered", http.StatusOK, "success", formatter)
 	c.JSON(http.StatusOK, response)
@@ -67,8 +78,16 @@ func (h *userHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
+	token, err := h.authSevice.GenerateToken(loggedInUser.Id)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
 
-	formatter := user.FormatUser(loggedInUser, "tokentokentoken")
+		response := helper.APIResponse("Login Failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	formatter := user.FormatUser(loggedInUser, token)
 	response := helper.APIResponse(
 		"Succesfuly Loggedin", http.StatusOK, "success", formatter)
 	c.JSON(http.StatusOK, response)

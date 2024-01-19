@@ -55,7 +55,7 @@ func (s *service) Login(input LoginInput) (User, error) {
 	if err != nil {
 		return user, err
 	}
-	if user.ID == 0 {
+	if user.Id == 0 {
 		return user, errors.New("No user found on that email")
 	}
 
@@ -74,7 +74,7 @@ func (s *service) IsEmailAvailable(input CheckEmailInput) (bool, error) {
 		return false, err
 	}
 
-	if user.ID == 0 {
+	if user.Id == 0 {
 		return true, nil
 	}
 
