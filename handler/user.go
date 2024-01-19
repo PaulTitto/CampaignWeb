@@ -20,7 +20,6 @@ func NewUserHandler(userService user.Service, authService auth.Service) *userHan
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
-	// Catch Input from user
 	var input user.RegisterUserInput
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
@@ -95,10 +94,8 @@ func (h *userHandler) Login(c *gin.Context) {
 
 func (h *userHandler) CheckEamilAvailablity(c *gin.Context) {
 
-	// There e having input from user
 	var input user.CheckEmailInput
 
-	// Input email mapping to struct input
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
 		errors := helper.FormatValidatorError(err)
@@ -109,7 +106,6 @@ func (h *userHandler) CheckEamilAvailablity(c *gin.Context) {
 		return
 	}
 
-	// Service will call repository - email exist or not
 	IsEmailAvailable, err := h.userService.IsEmailAvailable(input)
 	if err != nil {
 
@@ -118,8 +114,6 @@ func (h *userHandler) CheckEamilAvailablity(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-
-	// struct input passing to service
 
 	data := gin.H{
 		"is_available": IsEmailAvailable,
@@ -134,9 +128,9 @@ func (h *userHandler) CheckEamilAvailablity(c *gin.Context) {
 }
 
 func (h *userHandler) UploadAvatar(c *gin.Context) {
-	// c.SaveUploadedFile(file)
-	// Input from user
-	userID := 1
+	currentUser := c.MustGet("currentUser").(user.User)
+
+	userID := currentUser.Id
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
@@ -145,7 +139,6 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	// path := "images/" + file.Filename
 	path := fmt.Sprintf("images/%d-%s", userID, file.Filename)
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {
