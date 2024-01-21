@@ -2,9 +2,11 @@ package main
 
 import (
 	"campaignweb/auth"
+	"campaignweb/campaign"
 	"campaignweb/handler"
 	"campaignweb/helper"
 	"campaignweb/user"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -24,6 +26,17 @@ func main() {
 	}
 
 	userRepository := user.NewRepository(db)
+	campaignRepository := campaign.NewRepository(db)
+
+	campaigns, err := campaignRepository.FindAll()
+	if err != nil {
+		fmt.Println("Error fetching campaigns:", err)
+		return
+	}
+	fmt.Println("Campaigns:", campaigns)
+
+	// fmt.Println(len(campaigns))
+
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 	userHandler := handler.NewUserHandler(userService, authService)
