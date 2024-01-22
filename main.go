@@ -28,17 +28,13 @@ func main() {
 	userRepository := user.NewRepository(db)
 	campaignRepository := campaign.NewRepository(db)
 
-	campaigns, err := campaignRepository.FindAll()
-	if err != nil {
-		fmt.Println("Error fetching campaigns:", err)
-		return
-	}
-	fmt.Println("Campaigns:", campaigns)
-
-	// fmt.Println(len(campaigns))
-
 	userService := user.NewService(userRepository)
+	campaignService := campaign.NewService(campaignRepository)
 	authService := auth.NewService()
+
+	campaigns, _ := campaignService.FindCampaigns(0)
+	fmt.Println(len(campaigns))
+
 	userHandler := handler.NewUserHandler(userService, authService)
 
 	router := gin.Default()
