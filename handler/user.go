@@ -128,9 +128,6 @@ func (h *userHandler) CheckEamilAvailablity(c *gin.Context) {
 }
 
 func (h *userHandler) UploadAvatar(c *gin.Context) {
-	currentUser := c.MustGet("currentUser").(user.User)
-
-	userID := currentUser.Id
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
@@ -138,6 +135,9 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
+	currentUser := c.MustGet("currentUser").(user.User)
+
+	userID := currentUser.Id
 
 	path := fmt.Sprintf("images/%d-%s", userID, file.Filename)
 	err = c.SaveUploadedFile(file, path)

@@ -11,7 +11,7 @@ EXPOSE 8080
 
 
 ENV DB_HOST=localhost
-ENV DB_PORT=5432
+ENV DB_PORT=8080
 ENV DB_USER=myuser
 ENV DB_PASSWORD=mypassword
 ENV DB_NAME=mydatabase
