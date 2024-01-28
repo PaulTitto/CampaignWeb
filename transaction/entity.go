@@ -1,6 +1,9 @@
 package transaction
 
-import "time"
+import (
+	"campaignweb/user"
+	"time"
+)
 
 type Transaction struct {
 	ID         int
@@ -9,6 +12,7 @@ type Transaction struct {
 	Amount     int
 	Stauts     string
 	Code       string
+	User       user.User
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }
