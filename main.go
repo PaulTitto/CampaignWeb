@@ -5,6 +5,7 @@ import (
 	"campaignweb/campaign"
 	"campaignweb/handler"
 	"campaignweb/helper"
+	"campaignweb/payment"
 	"campaignweb/transaction"
 	"campaignweb/user"
 	"log"
@@ -32,7 +33,8 @@ func main() {
 	userService := user.NewService(userRepository)
 	campaignService := campaign.NewService(campaignRepository)
 	authService := auth.NewService()
-	transactionService := transaction.NewService(transactionRepository, campaignRepository)
+	paymentService := payment.NewService()
+	transactionService := transaction.NewService(transactionRepository, campaignRepository, paymentService)
 
 	userHandler := handler.NewUserHandler(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
