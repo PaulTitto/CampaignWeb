@@ -50,7 +50,7 @@ func FormatUserTransaction(transaction Transaction) UserTransactionFromatter {
 	formatter := UserTransactionFromatter{}
 	formatter.ID = transaction.ID
 	formatter.Amount = transaction.Amount
-	formatter.Status = transaction.Stauts
+	formatter.Status = transaction.Status
 	formatter.CreatedAt = transaction.CreatedAt
 
 	campaignFormater := CampaignFormater{}

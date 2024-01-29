@@ -11,7 +11,7 @@ type Transaction struct {
 	CampaignID int
 	UserID     int
 	Amount     int
-	Stauts     string
+	Status     string
 	Code       string
 	User       user.User
 	Campaign   campaign.Campaign
