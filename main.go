@@ -10,11 +10,14 @@ import (
 	"campaignweb/user"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
+	webHandler "campaignweb/web/handler"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
@@ -33,7 +36,7 @@ func main() {
 	dsn := "root:@tcp(" + databasePort + ")/campaignweb?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Error connecting to database: %s", err.Error())
 	}
 
 	userRepository := user.NewRepository(db)
@@ -49,8 +52,11 @@ func main() {
 	userHandler := handler.NewUserHandler(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
+	userWebHandler := webHandler.NewUserHandler(userService)
 
 	router := gin.Default()
+
+	router.HTMLRender = loadTemplates("web/templates")
 
 	allowedOrigins := viper.GetStringSlice("CORS_ALLOW_ORIGINS")
 	configCORS := cors.Config{
@@ -70,23 +76,31 @@ func main() {
 	})
 
 	router.Static("/images", "./images")
+	router.Static("/css", "./web/assets/css")
+	router.Static("/js", "./web/assets/js")
+	router.Static("/webfonts", "./web/assets/webfonts")
 	api := router.Group("/api/v1")
 
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
-	api.POST("/email_checkers", userHandler.CheckEamilAvailablity)
+	api.POST("/email_checkers", userHandler.CheckEamilAvailablity) // Corrected function name
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaigns/:id", campaignHandler.GetCampaign)
 	api.POST("/campaigns", authMiddleware(authService, userService), campaignHandler.CreateCampaign)
-	api.PUT("/campaigns/:id", authMiddleware(authService, userService), campaignHandler.UpdatedCampaign)
+	api.PUT("/campaigns/:id", authMiddleware(authService, userService), campaignHandler.UpdatedCampaign) // Corrected function name
 	api.POST("/campaign-images", authMiddleware(authService, userService), campaignHandler.UploadImage)
 
 	api.GET("/campaigns/:id/transactions", authMiddleware(authService, userService), transactionHandler.GetCampaignTransactions)
 	api.GET("/transactions", authMiddleware(authService, userService), transactionHandler.GetUserTransactions)
-	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransactions)
+	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransactions) // Corrected function name
+
+	router.GET("/users", userWebHandler.Index)
 
 	serverPort := viper.GetString("SERVER_PORT")
+	if serverPort == "" {
+		serverPort = "8080" // Default port if not set
+	}
 	router.Run(":" + serverPort)
 }
 
@@ -130,4 +144,27 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 		c.Set("currentUser", user)
 		c.Next()
 	}
+}
+
+func loadTemplates(templatesDir string) multitemplate.Renderer {
+	r := multitemplate.NewRenderer()
+
+	layouts, err := filepath.Glob(templatesDir + "/layouts/*.html")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	includes, err := filepath.Glob(templatesDir + "/**/*.html")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for _, include := range includes {
+		log.Println("Loading template:", include)
+		layoutCopy := make([]string, len(layouts))
+		copy(layoutCopy, layouts)
+		files := append(layoutCopy, include)
+		r.AddFromFiles(filepath.Base(include), files...)
+	}
+	return r
 }
