@@ -1,6 +1,10 @@
 {{ define "content" }}
 <h2 class="mb-4">List of User</h2>
-
+{{ if .Error }}
+<div class="alert alert-danger">
+    {{ .Error }}
+</div>
+{{ end }}
 <a href="/users/new" class="btn btn-primary mb-3"><i class="fa fa-plus"></i> New User</a>
 
 <div class="card mb-4">
@@ -19,7 +23,7 @@
             <tbody>
             {{ range .users }}
             <tr>
-
+                <td> <img class="img-fluid img-thumbnail" src="{{ .Avatar_file_name }}" width="60"></td>
                 <td>{{ .Name }}</td>
                 <td>{{ .Email }}</td>
                 <td>{{ .Occupation }}</td>

@@ -83,7 +83,7 @@ func main() {
 
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
-	api.POST("/email_checkers", userHandler.CheckEamilAvailablity) // Corrected function name
+	api.POST("/email_checkers", userHandler.CheckEamilAvailablity)
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaigns/:id", campaignHandler.GetCampaign)
@@ -96,6 +96,8 @@ func main() {
 	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransactions) // Corrected function name
 
 	router.GET("/users", userWebHandler.Index)
+	router.GET("/users/new", userWebHandler.New)
+	router.POST("/users", userWebHandler.Create)
 
 	serverPort := viper.GetString("SERVER_PORT")
 	if serverPort == "" {
