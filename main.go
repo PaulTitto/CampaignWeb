@@ -8,6 +8,7 @@ import (
 	"campaignweb/payment"
 	"campaignweb/transaction"
 	"campaignweb/user"
+	"gorm.io/driver/postgres"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +23,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -37,10 +37,14 @@ func main() {
 	//databasePort := viper.GetString("DATABASE_PORT")
 	errEnv := godotenv.Load(".env")
 	if errEnv != nil {
-		log.Fatal("Error load env")
+		log.Fatal("Error loading .env file")
 	}
-	conn := os.Getenv("MYSQL_URL")
-	db, err := gorm.Open(mysql.Open(conn), &gorm.Config{})
+
+	conn := os.Getenv("POSTGRES_URL")
+	if conn == "" {
+		log.Fatal("POSTGRES_URL is not set in the environment variables")
+	}
+	db, err := gorm.Open(postgres.Open(conn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err.Error())
 	}
