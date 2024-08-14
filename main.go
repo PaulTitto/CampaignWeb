@@ -10,6 +10,7 @@ import (
 	"campaignweb/user"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -32,9 +34,13 @@ func main() {
 		log.Fatalf("Error reading config file, %s", err)
 	}
 
-	databasePort := viper.GetString("DATABASE_PORT")
-	dsn := "root:@tcp(" + databasePort + ")/campaignweb?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	//databasePort := viper.GetString("DATABASE_PORT")
+	errEnv := godotenv.Load(".env")
+	if errEnv != nil {
+		log.Fatal("Error load env")
+	}
+	conn := os.Getenv("MYSQL_URL")
+	db, err := gorm.Open(mysql.Open(conn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err.Error())
 	}
@@ -95,6 +101,11 @@ func main() {
 	api.GET("/transactions", authMiddleware(authService, userService), transactionHandler.GetUserTransactions)
 	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransactions) // Corrected function name
 
+	router.GET("/", func(context *gin.Context) {
+		context.JSON(http.StatusOK, gin.H{
+			"message": "success",
+		})
+	})
 	router.GET("/users", userWebHandler.Index)
 	router.GET("/users/new", userWebHandler.New)
 	router.POST("/users", userWebHandler.Create)
