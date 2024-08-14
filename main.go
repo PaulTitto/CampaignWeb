@@ -103,7 +103,7 @@ func main() {
 	if serverPort == "" {
 		serverPort = "8080" // Default port if not set
 	}
-	router.Run(":" + serverPort)
+	router.Run()
 }
 
 func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
