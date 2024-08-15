@@ -21,4 +21,13 @@ type FormCreateUserInput struct {
 	Email      string `form:"email" binding:"required"`
 	Occupation string `form:"occupation" binding:"required"`
 	Password   string `form:"password" binding:"required"`
+	Error      error
+}
+
+type FormUpdateUserInput struct {
+	Id         int
+	Name       string `form:"name" binding:"required"`
+	Email      string `form:"email" binding:"required"`
+	Occupation string `form:"occupation" binding:"required"`
+	Error      error
 }

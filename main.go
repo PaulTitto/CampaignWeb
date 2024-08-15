@@ -8,10 +8,9 @@ import (
 	"campaignweb/payment"
 	"campaignweb/transaction"
 	"campaignweb/user"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,7 +20,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
@@ -35,19 +33,22 @@ func main() {
 	}
 
 	//databasePort := viper.GetString("DATABASE_PORT")
-	errEnv := godotenv.Load(".env")
-	if errEnv != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	conn := os.Getenv("POSTGRES_URL")
-	if conn == "" {
-		log.Fatal("POSTGRES_URL is not set in the environment variables")
-	}
-	db, err := gorm.Open(postgres.Open(conn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Error connecting to database: %s", err.Error())
-	}
+	//errEnv := godotenv.Load(".env")
+	//if errEnv != nil {
+	//	log.Fatal("Error loading .env file")
+	//}
+	//
+	//conn := os.Getenv("POSTGRES_URL")
+	//if conn == "" {
+	//	log.Fatal("POSTGRES_URL is not set in the environment variables")
+	//}
+	//db, err := gorm.Open(postgres.Open(conn), &gorm.Config{})
+	//if err != nil {
+	//	log.Fatalf("Error connecting to database: %s", err.Error())
+	//}
+	databasePort := viper.GetString("DATABASE_PORT")
+	dsn := "root:@tcp(" + databasePort + ")/campaignweb?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	userRepository := user.NewRepository(db)
 	campaignRepository := campaign.NewRepository(db)
@@ -63,6 +64,7 @@ func main() {
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 	userWebHandler := webHandler.NewUserHandler(userService)
+	campaignsWebHandler := webHandler.NewCampaignHandler(campaignService, userService)
 
 	router := gin.Default()
 
@@ -112,7 +114,20 @@ func main() {
 	})
 	router.GET("/users", userWebHandler.Index)
 	router.GET("/users/new", userWebHandler.New)
+	router.GET("/users/avatar/:id", userWebHandler.NewAvatar)
+	router.POST("/users/avatar/:id", userWebHandler.CreateAvatar)
 	router.POST("/users", userWebHandler.Create)
+	router.GET("/users/edit/:id", userWebHandler.Edit)
+	router.POST("/users/update/:id", userWebHandler.Update)
+
+	router.GET("/campaigns", campaignsWebHandler.Index)
+	router.GET("/campaigns/new", campaignsWebHandler.New)
+	router.POST("/campaigns", campaignsWebHandler.Create)
+	router.GET("/campaigns/image/:id", campaignsWebHandler.NewImage)
+	router.POST("/campaigns/image/:id", campaignsWebHandler.CreateImage)
+	router.GET("/campaigns/edit/:id", campaignsWebHandler.Edit)
+	router.POST("/campaigns/update/:id", campaignsWebHandler.Update)
+	router.GET("/campaigns/show/:id", campaignsWebHandler.Show)
 
 	serverPort := viper.GetString("SERVER_PORT")
 	if serverPort == "" {

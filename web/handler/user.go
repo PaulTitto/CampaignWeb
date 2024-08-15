@@ -2,8 +2,10 @@ package handler
 
 import (
 	"campaignweb/user"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type userHandler struct {
@@ -34,6 +36,7 @@ func (h *userHandler) Create(c *gin.Context) {
 
 	err := c.ShouldBind(&input)
 	if err != nil {
+		input.Error = err
 		c.HTML(http.StatusOK, "user_new.html", input)
 		return
 	}
@@ -50,5 +53,78 @@ func (h *userHandler) Create(c *gin.Context) {
 		c.HTML(http.StatusInternalServerError, "error.html", nil)
 		return
 	}
+	c.Redirect(http.StatusFound, "/users")
+}
+
+func (h *userHandler) Edit(c *gin.Context) {
+	idParams := c.Param("id")
+	id, _ := strconv.Atoi(idParams)
+	registeredUser, err := h.userService.GetUserByID(id)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "erorr.html", nil)
+		return
+	}
+
+	input := user.FormUpdateUserInput{}
+	input.Id = registeredUser.Id
+	input.Name = registeredUser.Name
+	input.Email = registeredUser.Email
+	input.Occupation = registeredUser.Occupation
+
+	c.HTML(http.StatusOK, "user_edit.html", input)
+}
+
+func (h *userHandler) Update(c *gin.Context) {
+	idParam := c.Param("id")
+	id, _ := strconv.Atoi(idParam)
+	var input user.FormUpdateUserInput
+
+	err := c.ShouldBind(&input)
+	if err != nil {
+		input.Error = err
+		c.HTML(http.StatusOK, "user_edit.html", input)
+		return
+	}
+
+	input.Id = id
+	_, err = h.userService.UpdateUser(input)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/users")
+}
+
+func (h *userHandler) NewAvatar(c *gin.Context) {
+	idParam := c.Param("id")
+	id, _ := strconv.Atoi(idParam)
+	c.HTML(http.StatusOK, "user_avatar.html", gin.H{
+		"Id": id,
+	})
+}
+
+func (h *userHandler) CreateAvatar(c *gin.Context) {
+	idParam := c.Param("id")
+	id, _ := strconv.Atoi(idParam)
+
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+	userId := id
+	path := fmt.Sprintf("images/%d-%s", userId, file.Filename)
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+	_, err = h.userService.SaveAvatar(userId, path)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+
 	c.Redirect(http.StatusFound, "/users")
 }
